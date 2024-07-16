@@ -417,6 +417,7 @@ bool RecordPageHandler::is_full() const { return page_header_->record_num >= pag
 RC PaxRecordPageHandler::insert_record(const char *data, RID *rid)
 {
   // your code here
+  exit(-1);
     ASSERT(rw_mode_ != ReadWriteMode::READ_ONLY, 
          "cannot insert record into page while the page is readonly");
 
@@ -476,6 +477,7 @@ RC PaxRecordPageHandler::delete_record(const RID *rid)
 RC PaxRecordPageHandler::get_record(const RID &rid, Record &record)
 {
   // your code here
+  exit(-1);
   if (rid.slot_num >= page_header_->record_capacity) {
     LOG_ERROR("Invalid slot_num %d, exceed page's record capacity, frame=%s, page_header=%s",
               rid.slot_num, frame_->to_string().c_str(), page_header_->to_string().c_str());
@@ -503,6 +505,7 @@ RC PaxRecordPageHandler::get_record(const RID &rid, Record &record)
 RC PaxRecordPageHandler::get_chunk(Chunk &chunk)
 {
   // your code here
+  exit(-1);
   int *col_idx = reinterpret_cast<int *>(frame_->data() + page_header_->col_idx_offset);
   for(int i=0;i<chunk.column_num();i++)
   {
