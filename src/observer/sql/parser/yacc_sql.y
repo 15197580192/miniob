@@ -531,6 +531,21 @@ expression:
       $$ = new StarExpr();
     }
     // your code here
+    | SUM expression {
+      $$ = new AggregateExpr(AggregateExpr::Type::SUM, $2);
+    }
+    | COUNT expression {
+      $$ = new AggregateExpr(AggregateExpr::Type::COUNT, $2);
+    }
+    | AVG expression {
+      $$ = new AggregateExpr(AggregateExpr::Type::AVG, $2);
+    }
+    | MAX expression {
+      $$ = new AggregateExpr(AggregateExpr::Type::MAX, $2);
+    }
+    | MIN expression {
+      $$ = new AggregateExpr(AggregateExpr::Type::MIN, $2);
+    }
     ;
 
 rel_attr:
@@ -661,6 +676,9 @@ group_by:
     /* empty */
     {
       $$ = nullptr;
+    }
+    | group_by expression_list {
+      $$ = $2;  
     }
     ;
 load_data_stmt:

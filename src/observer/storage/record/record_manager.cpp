@@ -581,11 +581,7 @@ RC PaxRecordPageHandler::get_chunk(Chunk &chunk)
   {
     int id_ = chunk.column_ids((size_t)i);
     // unique_ptr<Column> ptr(new Column);
-    char* d ;
     if(id_==0)
-      d= frame_->data() + page_header_->data_offset;
-      else
-        d = frame_->data() + page_header_->data_offset + col_idx[id_-1];
     chunk.column(i)
     //ptr->append(d,page_header_->record_num);
     chunk.add_column(std::move(ptr),id_);
@@ -610,6 +606,7 @@ RC PaxRecordPageHandler::get_chunk(Chunk &chunk)
     }
   }
   return RC::SUCCESS;
+
 }
 
 char *PaxRecordPageHandler::get_field_data(SlotNum slot_num, int col_id)
