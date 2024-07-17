@@ -502,7 +502,7 @@ RC PaxRecordPageHandler::get_record(const RID &rid, Record &record)
     memcpy(data+offset,_data,get_field_len(i));
     offset+=get_field_len(i);
   }
-  record.set_data(data,page_header_->record_real_size);
+  record.copy_data(data,page_header_->record_real_size);
   return RC::SUCCESS;
 }
 /*
