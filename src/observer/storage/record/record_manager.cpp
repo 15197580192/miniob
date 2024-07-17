@@ -428,7 +428,7 @@ RC PaxRecordPageHandler::insert_record(const char *data, RID *rid)
 
   // 找到空闲位置
   Bitmap bitmap(bitmap_, page_header_->record_capacity);
-  int    index = bitmap.next_unsetted_bit(0);
+  int index = bitmap.next_unsetted_bit(0);
   bitmap.set_bit(index);
   page_header_->record_num++;
 
@@ -437,10 +437,12 @@ RC PaxRecordPageHandler::insert_record(const char *data, RID *rid)
     LOG_ERROR("Failed to insert record. page_num %d:%d. rc=%s", disk_buffer_pool_->file_desc(), frame_->page_num(), strrc(rc));
     // return rc; // ignore errors
   }
+  int offset=0;
   for(int i=0;i<page_header_->column_num;i++)
   {
     char* _data = get_field_data(index,i);
-    memcpy(_data,data+i*(get_field_len(i)),get_field_len(i));
+    memcpy(_data,data+offset,get_field_len(i));
+    offset+=get_field_len(i);
   }
   if(rid)
   {
@@ -492,15 +494,17 @@ RC PaxRecordPageHandler::get_record(const RID &rid, Record &record)
   record.set_rid(rid);
   
   char* data = new char[page_header_->record_real_size];
+  int offset=0;
   for(int i=0;i<page_header_->column_num;i++)
   {
     char* _data = get_field_data(rid.slot_num,i);
-    memcpy(data+i*(get_field_len(i)),_data,get_field_len(i));
+    memcpy(data+offset,_data,get_field_len(i));
+    offset+=get_field_len(i);
   }
   record.set_data(data,page_header_->record_real_size);
   return RC::SUCCESS;
 }
-
+/*
 // TODO: specify the column_ids that chunk needed. currenly we get all columns
 RC PaxRecordPageHandler::get_chunk(Chunk &chunk)
 {
@@ -510,14 +514,34 @@ RC PaxRecordPageHandler::get_chunk(Chunk &chunk)
   for(int i=0;i<chunk.column_num();i++)
   {
     int id_ = chunk.column_ids((size_t)i);
-    unique_ptr<Column> ptr(new Column);
+    // unique_ptr<Column> ptr(new Column);
     char* d ;
     if(id_==0)
       d= frame_->data() + page_header_->data_offset;
       else
         d = frame_->data() + page_header_->data_offset + col_idx[id_-1];
-    ptr->append(d,page_header_->record_num);
+    chunk.column(i)
+    //ptr->append(d,page_header_->record_num);
     chunk.add_column(std::move(ptr),id_);
+  }
+  return RC::SUCCESS;
+}
+*/
+RC PaxRecordPageHandler::get_chunk(Chunk &chunk)
+{
+  // your code here
+
+  Bitmap bitmap(bitmap_, page_header_->record_capacity);
+  for(int i=0;i<chunk.column_num();i++)
+  {
+    int id_ = chunk.column_ids((size_t)i);
+    int index = 0;
+    for(int q=0;q<page_header_->record_num;q++)
+    {
+      index = bitmap.next_setted_bit(index);
+      chunk.column(i).append_one(get_field_data(index,id_));
+      index++;
+    }
   }
   return RC::SUCCESS;
 }
