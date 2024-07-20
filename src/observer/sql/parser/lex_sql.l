@@ -80,8 +80,14 @@ QUOTE            [\'\"]
 [\-]?{DIGIT}+                           yylval->number=atoi(yytext); RETURN_TOKEN(NUMBER);
 [\-]?{DIGIT}+{DOT}{DIGIT}+              yylval->floats=(float)(atof(yytext)); RETURN_TOKEN(FLOAT);
 
+
 ";"                                     RETURN_TOKEN(SEMICOLON);
 {DOT}                                   RETURN_TOKEN(DOT);
+SUM                                   RETURN_TOKEN(SUM_STR);
+MIN                                   RETURN_TOKEN(MIN_STR);
+MAX                                   RETURN_TOKEN(MAX_STR);
+AVG                                   RETURN_TOKEN(AVG_STR);
+COUNT                                 RETURN_TOKEN(COUNT_STR);
 EXIT                                    RETURN_TOKEN(EXIT);
 HELP                                    RETURN_TOKEN(HELP);
 DESC                                    RETURN_TOKEN(DESC);
@@ -115,11 +121,6 @@ DATA                                    RETURN_TOKEN(DATA);
 INFILE                                  RETURN_TOKEN(INFILE);
 EXPLAIN                                 RETURN_TOKEN(EXPLAIN);
 GROUP                                   RETURN_TOKEN(GROUP);
-SUM                                     RETURN_TOKEN(SUM);
-COUNT                                   RETURN_TOKEN(COUNT);
-AVG                                     RETURN_TOKEN(AVG);
-MAX                                     RETURN_TOKEN(MAX);
-MIN                                     RETURN_TOKEN(MIN);
 BY                                      RETURN_TOKEN(BY);
 STORAGE                                 RETURN_TOKEN(STORAGE);
 FORMAT                                  RETURN_TOKEN(FORMAT);
@@ -135,6 +136,7 @@ FORMAT                                  RETURN_TOKEN(FORMAT);
 "<"                                     RETURN_TOKEN(LT);
 ">="                                    RETURN_TOKEN(GE);
 ">"                                     RETURN_TOKEN(GT);
+
 
 "+" |
 "-" |
