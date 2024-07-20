@@ -12,13 +12,16 @@
 #include "sql/parser/yacc_sql.hpp"
 #include "sql/parser/lex_sql.h"
 #include "sql/expr/expression.h"
+#include "sql/parser/parse.h"
 
 using namespace std;
+
 
 string token_name(const char *sql_string, YYLTYPE *llocp)
 {
   return string(sql_string + llocp->first_column, llocp->last_column - llocp->first_column + 1);
 }
+
 
 int yyerror(YYLTYPE *llocp, const char *sql_string, ParsedSqlResult *sql_result, yyscan_t scanner, const char *msg)
 {
@@ -91,6 +94,11 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         FLOAT_T
         HELP
         EXIT
+        SUM_STR
+        MIN_STR
+        MAX_STR
+        AVG_STR
+        COUNT_STR
         DOT //QUOTE
         INTO
         VALUES
@@ -111,11 +119,6 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         LE
         GE
         NE
-        SUM
-        COUNT
-        AVG
-        MIN
-        MAX
 
 /** union 中定义各种数据类型，真实生成的代码也是union类型，所以不能有非POD类型的数据 **/
 %union {
@@ -135,6 +138,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   char *                                     string;
   int                                        number;
   float                                      floats;
+  char*                                      agg_func;
 }
 
 %token <number> NUMBER
@@ -144,6 +148,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 //非终结符
 
 /** type 定义了各种解析后的结果输出的是什么类型。类型对应了 union 中的定义的成员变量名称 **/
+%type <agg_func>            agg_func
 %type <number>              type
 %type <condition>           condition
 %type <value>               value
@@ -353,6 +358,7 @@ attr_def:
     {
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
+      // printf("test %d\n", $$->type);
       $$->name = $1;
       $$->length = 4;
       free($1);
@@ -402,12 +408,12 @@ value:
       $$ = new Value((int)$1);
       @$ = @1;
     }
-    |FLOAT {
+    | FLOAT {
       $$ = new Value((float)$1);
       @$ = @1;
     }
-    |SSS {
-      char *tmp = common::substr($1,1,strlen($1)-2);
+    | SSS {
+      char *tmp = common::substr($1, 1, strlen($1) - 2);
       $$ = new Value(tmp);
       free(tmp);
       free($1);
@@ -449,6 +455,7 @@ update_stmt:      /*  update 语句的语法解析树*/
       }
       free($2);
       free($4);
+      delete($6);
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
@@ -501,6 +508,7 @@ expression_list:
       $$->emplace($$->begin(), $1);
     }
     ;
+
 expression:
     expression '+' expression {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
@@ -535,21 +543,40 @@ expression:
     | '*' {
       $$ = new StarExpr();
     }
-    // your code here
-    | SUM expression {
-      $$ = new AggregateExpr(AggregateExpr::Type::SUM, $2);
+    | agg_func LBRACE expression RBRACE {
+      $$ = create_aggregate_expression($1, $3, sql_string, &@$);
+      delete[] $1;
     }
-    | COUNT expression {
-      $$ = new AggregateExpr(AggregateExpr::Type::COUNT, $2);
+    | agg_func LBRACE RBRACE {
+      $$ = create_aggregate_expression($1, nullptr, sql_string, &@$);
+      delete[] $1;
     }
-    | AVG expression {
-      $$ = new AggregateExpr(AggregateExpr::Type::AVG, $2);
+    | agg_func LBRACE expression COMMA expression_list RBRACE {
+      $$ = create_aggregate_expression($1, $3, sql_string, &@$);
+      delete[] $1;
     }
-    | MAX expression {
-      $$ = new AggregateExpr(AggregateExpr::Type::MAX, $2);
+    ;
+
+agg_func:
+    SUM_STR { 
+      $$ = new char[4];
+      strcpy($$, "SUM");
     }
-    | MIN expression {
-      $$ = new AggregateExpr(AggregateExpr::Type::MIN, $2);
+    | MIN_STR { 
+      $$ = new char[4];
+      strcpy($$, "MIN");
+    }
+    | MAX_STR { 
+      $$ = new char[4];
+      strcpy($$, "MAX");
+    }
+    | AVG_STR { 
+      $$ = new char[4];
+      strcpy($$, "AVG");
+    }
+    | COUNT_STR { 
+      $$ = new char[6];
+      strcpy($$, "COUNT");
     }
     ;
 
@@ -682,8 +709,9 @@ group_by:
     {
       $$ = nullptr;
     }
-    | GROUP BY expression_list {
-      $$ = $3;  
+    | GROUP BY expression_list
+    {
+      $$ = $3;
     }
     ;
 load_data_stmt:
