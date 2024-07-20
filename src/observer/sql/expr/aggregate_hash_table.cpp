@@ -15,7 +15,51 @@ See the Mulan PSL v2 for more details. */
 RC StandardAggregateHashTable::add_chunk(Chunk &groups_chunk, Chunk &aggrs_chunk)
 {
   // your code here
-  exit(-1);
+  // exit(-1);
+  // while (it_ != end_ && groups_chunk.rows() <= groups_chunk.capacity()) {
+  //   for (int i = 0; i < groups_chunk.column_num(); i++) {
+  //     it_->first.push_back(Value(groups_chunk.column(i).data()));
+  //     it_->second.push_back(Value(aggrs_chunk.column(i).data()));
+  //   }
+  //   it_++;
+  // }
+  if (groups_chunk.rows() != aggrs_chunk.rows()) {
+    LOG_WARN("Group and aggregate chunks must have the same number of rows.");
+    return RC::INVALID_ARGUMENT;
+  }
+
+  for (int i = 0; i < groups_chunk.rows(); i++) {
+    std::vector<Value> group_by_values;
+    for (int j = 0; j < groups_chunk.column_num(); j++) {
+      group_by_values.push_back(groups_chunk.column(j).get_value(i));
+    }
+
+    std::vector<Value> aggr_values;
+    for (int j = 0; j < aggrs_chunk.column_num(); j++) {
+      aggr_values.push_back(aggrs_chunk.column(j).get_value(i));
+    }
+
+    auto it = aggr_values_.find(group_by_values);
+    if (it != aggr_values_.end()) {
+      // Assuming aggregation is sum for simplicity
+      std::vector<Value> &old_value = it->second;
+      for(size_t i = 0; i < old_value.size(); i++) {
+        if(aggr_values[i].type() == Value::Type::INT) {
+          old_value[i] = Value(old_value[i].get_int() + aggr_values[i].get_int());
+        } else if(aggr_values[i].type() == Value::Type::FLOAT) {
+          old_value[i] = Value(old_value[i].get_float() + aggr_values[i].get_float());
+        } else {
+          LOG_WARN("Unsupported aggregation type.");
+          return RC::INVALID_ARGUMENT;
+        }
+      }
+      
+    } else {
+      aggr_values_[group_by_values] = aggr_values;
+    }
+  }
+
+  return RC::SUCCESS;
 }
 
 void StandardAggregateHashTable::Scanner::open_scan()
