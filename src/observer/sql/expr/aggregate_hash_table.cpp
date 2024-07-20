@@ -11,54 +11,54 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/aggregate_hash_table.h"
 
 // ----------------------------------StandardAggregateHashTable------------------
-
+/*
+a b c group by a b sum(c)
+1 0 3 2
+2 5 8
+3 6 9
+1 2 7
+1 0 6 5
+*/
+/*
+1 0 9 7
+2 5 8
+3 6 9
+1 2 7
+*/
 RC StandardAggregateHashTable::add_chunk(Chunk &groups_chunk, Chunk &aggrs_chunk)
 {
-  // your code here
-  // exit(-1);
-  // while (it_ != end_ && groups_chunk.rows() <= groups_chunk.capacity()) {
-  //   for (int i = 0; i < groups_chunk.column_num(); i++) {
-  //     it_->first.push_back(Value(groups_chunk.column(i).data()));
-  //     it_->second.push_back(Value(aggrs_chunk.column(i).data()));
-  //   }
-  //   it_++;
-  // }
-  if (groups_chunk.rows() != aggrs_chunk.rows()) {
-    LOG_WARN("Group and aggregate chunks must have the same number of rows.");
-    return RC::INVALID_ARGUMENT;
-  }
-
-  for (int i = 0; i < groups_chunk.rows(); i++) {
-    std::vector<Value> group_by_values;
-    for (int j = 0; j < groups_chunk.column_num(); j++) {
-      group_by_values.push_back(groups_chunk.column(j).get_value(i));
+  vector<Value> key,value;
+  for(size_t r = 0;r<groups_chunk.rows();r++)
+  {
+    key.clear();
+    value.clear();
+    for(size_t group_id = 0;group_id<groups_chunk.column_num();group_id++)
+    {
+      key.emplace_back(groups_chunk.get_value(group_id,r));
+    }
+    for(size_t aggr_val_id = 0;aggr_val_id<aggrs_chunk.column_num();aggr_val_id++)
+    {
+      value.emplace_back(aggrs_chunk.get_value(aggr_val_id,r));
     }
 
-    std::vector<Value> aggr_values;
-    for (int j = 0; j < aggrs_chunk.column_num(); j++) {
-      aggr_values.push_back(aggrs_chunk.column(j).get_value(i));
-    }
-
-    auto it = aggr_values_.find(group_by_values);
-    if (it != aggr_values_.end()) {
-      // Assuming aggregation is sum for simplicity
-      std::vector<Value> &old_value = it->second;
-      for(size_t i = 0; i < old_value.size(); i++) {
-        if(aggr_values[i].type() == Value::Type::INT) {
-          old_value[i] = Value(old_value[i].get_int() + aggr_values[i].get_int());
-        } else if(aggr_values[i].type() == Value::Type::FLOAT) {
-          old_value[i] = Value(old_value[i].get_float() + aggr_values[i].get_float());
-        } else {
-          LOG_WARN("Unsupported aggregation type.");
-          return RC::INVALID_ARGUMENT;
+    if(aggr_values_.find(key)!=aggr_values_.end())
+    {
+      vector<Value>& old = aggr_values_.find(key)->second;
+      for(int i=0;i<old.size();i++)
+      {
+        if(old[i].attr_type()==AttrType::INTS)
+        {
+          old[i].set_int(old[i].get_int()+value[i].get_int());
+        }
+        else if(old[i].attr_type()==AttrType::FLOATS)
+        {
+          old[i].set_float(old[i].get_float()+value[i].get_float());
         }
       }
-      
-    } else {
-      aggr_values_[group_by_values] = aggr_values;
     }
+    else
+      aggr_values_[key]=value;
   }
-
   return RC::SUCCESS;
 }
 
