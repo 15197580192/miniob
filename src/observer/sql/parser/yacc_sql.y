@@ -682,8 +682,8 @@ group_by:
     {
       $$ = nullptr;
     }
-    | group_by expression_list {
-      $$ = $2;  
+    | GROUP BY expression_list {
+      $$ = $3;  
     }
     ;
 load_data_stmt:
