@@ -81,31 +81,31 @@ extern int yydebug;
     FLOAT_T = 282,                 /* FLOAT_T  */
     HELP = 283,                    /* HELP  */
     EXIT = 284,                    /* EXIT  */
-    DOT = 285,                     /* DOT  */
-    INTO = 286,                    /* INTO  */
-    VALUES = 287,                  /* VALUES  */
-    FROM = 288,                    /* FROM  */
-    WHERE = 289,                   /* WHERE  */
-    AND = 290,                     /* AND  */
-    SET = 291,                     /* SET  */
-    ON = 292,                      /* ON  */
-    LOAD = 293,                    /* LOAD  */
-    DATA = 294,                    /* DATA  */
-    INFILE = 295,                  /* INFILE  */
-    EXPLAIN = 296,                 /* EXPLAIN  */
-    STORAGE = 297,                 /* STORAGE  */
-    FORMAT = 298,                  /* FORMAT  */
-    EQ = 299,                      /* EQ  */
-    LT = 300,                      /* LT  */
-    GT = 301,                      /* GT  */
-    LE = 302,                      /* LE  */
-    GE = 303,                      /* GE  */
-    NE = 304,                      /* NE  */
-    SUM = 305,                     /* SUM  */
-    COUNT = 306,                   /* COUNT  */
-    AVG = 307,                     /* AVG  */
-    MIN = 308,                     /* MIN  */
-    MAX = 309,                     /* MAX  */
+    SUM_STR = 285,                 /* SUM_STR  */
+    MIN_STR = 286,                 /* MIN_STR  */
+    MAX_STR = 287,                 /* MAX_STR  */
+    AVG_STR = 288,                 /* AVG_STR  */
+    COUNT_STR = 289,               /* COUNT_STR  */
+    DOT = 290,                     /* DOT  */
+    INTO = 291,                    /* INTO  */
+    VALUES = 292,                  /* VALUES  */
+    FROM = 293,                    /* FROM  */
+    WHERE = 294,                   /* WHERE  */
+    AND = 295,                     /* AND  */
+    SET = 296,                     /* SET  */
+    ON = 297,                      /* ON  */
+    LOAD = 298,                    /* LOAD  */
+    DATA = 299,                    /* DATA  */
+    INFILE = 300,                  /* INFILE  */
+    EXPLAIN = 301,                 /* EXPLAIN  */
+    STORAGE = 302,                 /* STORAGE  */
+    FORMAT = 303,                  /* FORMAT  */
+    EQ = 304,                      /* EQ  */
+    LT = 305,                      /* LT  */
+    GT = 306,                      /* GT  */
+    LE = 307,                      /* LE  */
+    GE = 308,                      /* GE  */
+    NE = 309,                      /* NE  */
     NUMBER = 310,                  /* NUMBER  */
     FLOAT = 311,                   /* FLOAT  */
     ID = 312,                      /* ID  */
@@ -119,7 +119,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 121 "yacc_sql.y"
+#line 124 "yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
@@ -137,8 +137,9 @@ union YYSTYPE
   char *                                     string;
   int                                        number;
   float                                      floats;
+  char*                                      agg_func;
 
-#line 142 "yacc_sql.hpp"
+#line 143 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
